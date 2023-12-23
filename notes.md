@@ -31,13 +31,60 @@ Dump bytes at a certain offset within a binary:
 ⇒ rabin2 -A samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
 000 0x00004000 7922416 x86_64 x86 64 all
 001 0x00794000 8783712 arm_64 arm64e
+```
 
+Using `xxd`:
+
+```bash
 # x86_64 (based on the above 0x00004000 offset + our known x86_64 function offset within that arch binary)
-⇒ xxd -s +$((0x4000 + 0xccfdf)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
+⇒ xxd -s +$((0x4000 + 0xccfdf)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | tr -d '\n'; echo
 554889e54157415641554154534883ec284989f648897dd04c8b3d
 
 # arm_64 (based on the above 0x00794000 offset + our known arm_64 function offset within that arch binary)
-⇒ xxd -s +$((0x794000 + 0xb7570)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
+⇒ xxd -s +$((0x794000 + 0xb7570)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | tr -d '\n'; echo
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05
+```
+
+Using `hexdump`:
+
+```bash
+# x86_64 (based on the above 0x00004000 offset + our known x86_64 function offset within that arch binary)
+⇒ hexdump -v -e '1/1 "%02x"' -s $((0x4000 + 0xccfdf)) -n 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | tr -d '\n'; echo
+554889e54157415641554154534883ec284989f648897dd04c8b3d
+
+# arm_64 (based on the above 0x00794000 offset + our known arm_64 function offset within that arch binary)
+⇒ hexdump -v -e '1/1 "%02x"' -s $((0x794000 + 0xb7570)) -n 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | tr -d '\n'; echo
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05
+```
+
+Using `dd` + `python`:
+
+```bash
+# x86_64 (based on the above 0x00004000 offset + our known x86_64 function offset within that arch binary)
+⇒ dd bs=1 skip=$((0x4000 + 0xccfdf)) count=27 if=samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | python -c "import sys; print(''.join(['{:02x}'.format(x) for x in sys.stdin.buffer.read()]))"
+27+0 records in
+27+0 records out
+27 bytes transferred in 0.000067 secs (402985 bytes/sec)
+554889e54157415641554154534883ec284989f648897dd04c8b3d
+
+# arm_64 (based on the above 0x00794000 offset + our known arm_64 function offset within that arch binary)
+⇒ dd bs=1 skip=$((0x794000 + 0xb7570)) count=27 if=samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | python -c "import sys; print(''.join(['{:02x}'.format(x) for x in sys.stdin.buffer.read()]))"
+27+0 records in
+27+0 records out
+27 bytes transferred in 0.000064 secs (421875 bytes/sec)
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05
+```
+
+Using `python`:
+
+```bash
+# x86_64 (based on the above 0x00004000 offset + our known x86_64 function offset within that arch binary)
+⇒ python -c "import sys; f = open(sys.argv[1], 'rb'); f.seek(int(sys.argv[2])); print(''.join('{:02x}'.format(x) for x in f.read(int(sys.argv[3])))); f.close()" samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd $((0x4000 + 0xccfdf)) 27
+554889e54157415641554154534883ec284989f648897dd04c8b3d
+
+# arm_64 (based on the above 0x00794000 offset + our known arm_64 function offset within that arch binary)
+⇒ python -c "import sys; f = open(sys.argv[1], 'rb'); f.seek(int(sys.argv[2])); print(''.join('{:02x}'.format(x) for x in f.read(int(sys.argv[3])))); f.close()" samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd $((0x794000 + 0xb7570)) 27
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05
 ```
 
 ## `radare2`
