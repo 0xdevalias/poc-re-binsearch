@@ -1,0 +1,5 @@
+SEARCH_DIRECTORY="samples/"
+PATTERN='554889e541574156415541545350b878180000e8e87200004829c4'
+
+# Using fd
+fd . "$SEARCH_DIRECTORY" --type f --exec sh -c 'output=$(rafind2 -x "$1" "$2"); [ -n "$output" ] && (echo "$2:"; echo "$output")' sh "$PATTERN" {} "$SEARCH_DIRECTORY"
