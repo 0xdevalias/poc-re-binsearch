@@ -22,11 +22,11 @@ Proof of Concept (PoC) code/notes exploring reverse engineering techniques for m
         Offset: 0x7a4000 (Valid Mach-O Header: Yes)
         Size: 8833808
         Align: 14
-  
+
       -= Found Symbol Offsets =-
       Offset of _IDSProtoKeyTransparencyTrustedServiceReadFrom in architecture x86_64: 0x0cc743
       Offset of _IDSProtoKeyTransparencyTrustedServiceReadFrom in architecture arm64e: 0x0b524c
-  
+
       -= Found Hex Offsets (with pure python fixed sequence search + regex) =-
       Architecture 0 (x86_64):
         IDSProtoKeyTransparencyTrustedServiceReadFrom: 0xcc743
@@ -34,6 +34,10 @@ Proof of Concept (PoC) code/notes exploring reverse engineering techniques for m
         NACKeyEstablishmentAddress: 0x499220
         NACSignAddress: 0x4ac510
       Architecture 1 (arm64e):
+        IDSProtoKeyTransparencyTrustedServiceReadFrom: 0xb524c
+        NACInitAddress: 0x41d714
+        NACKeyEstablishmentAddress: 0x40af78
+        NACSignAddress: 0x3e5184
       ```
     - See also:
       - https://github.com/beeper/mac-registration-provider
