@@ -42,6 +42,7 @@ Proof of Concept (PoC) code/notes exploring reverse engineering techniques for m
         - > add offsets for `13.3.1` (x86/arm64) + `13.5` (x86)
         - https://github.com/beeper/mac-registration-provider/pull/7#issuecomment-1867733658
           - > I've also been working on a PoC script that is able to find the offsets automagically
+- [`diff_hex.py`](./diff_hex.py): Quick/dirty python script to diff the provided hex bytes, and generate a pattern with wildcards that can be used in `find_fat_binary_offsets.py` / `rafind2-fat-binary` / `rafind2` / etc
 - [`find_bytes.py`](./find_bytes.py): Quick/dirty python script to find hex bytes in a binary file (no smarts)
 - [`rafind2-fat-binary`](./rafind2-fat-binary): Helper script that uses `radare2`'s `rabin` + `rafind2` to search for a hex string (with potential wildcards) in the specified architecture of a macOS fat/universal binary
 - [`xxd-fat-binary`](./xxd-fat-binary): Helper script that uses `radare2`'s `rabin` + `xxd` to dump the specified length of hex bytes in the specified architecture of a macOS fat/universal binary
