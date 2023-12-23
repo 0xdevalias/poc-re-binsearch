@@ -11,17 +11,17 @@ usage() {
     echo "This script searches for a specified hexadecimal pattern in a given binary file for a specified architecture."
     echo "It leverages radare2 tools (rabin2, rafind2) to analyze fat binaries and extract architecture-specific information."
     echo
-    echo "Usage: $0 -a ARCH -b BIN -x HEX"
+    echo "Usage: $0 -a ARCH -x HEX -b BIN"
     echo "  -a ARCH  Specify the architecture to search within the fat binary (e.g., x86_64, arm_64)"
-    echo "  -b BIN   Specify the binary file to search"
     echo "  -x HEX   Specify the hexadecimal pattern for rafind2"
+    echo "  -b BIN   Specify the binary file to search"
     echo "  -h       Display this help message"
     echo
     echo "Examples:"
     echo "  For x86_64 architecture:"
-    echo "    $0 -a x86_64 -b [binary file] -x [hex pattern]"
+    echo "    $0 -a x86_64 -x [hex pattern] -b [binary file]"
     echo "  For arm_64 architecture:"
-    echo "    $0 -a arm_64 -b [binary file] -x [hex pattern]"
+    echo "    $0 -a arm_64 -x [hex pattern] -b [binary file]"
     echo
     echo "Example usage:"
     echo "  $0 -a x86_64 -x 'cffaedfe' -b samples/foo"
