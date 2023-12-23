@@ -32,12 +32,12 @@ hex_strings = {
         "NACKeyEstablishmentAddress": "554889e54157415641554154534881ec48010000488b05......00488b00488945d04885ff0f94c04889b5f0feffff",
         "NACSignAddress": "554889e54157415641554154534881eca80300004189d24889b5b0fdffff4989fe488b05",
     },
-    # "arm64": {
-    #   "IDSProtoKeyTransparencyTrustedServiceReadFrom": "TODO",
-    #   "NACInitAddress": "TODO",
-    #   "NACKeyEstablishmentAddress": "TODO",
-    #   "NACSignAddress": "TODO",
-    # }
+    "arm64e": {
+        "IDSProtoKeyTransparencyTrustedServiceReadFrom": "7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa....00..d6....f9c80280b9..6868f8....00..f7....f9..0280b9..68..f8....00..18....f9..01..eb....0054f40300aa39008052faf301b2",
+        "NACInitAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd43019109108352",
+        "NACKeyEstablishmentAddress": "7f2303d5ff0306d1fc6f12a9fa6713a9f85f14a9f65715a9f44f16a9fd7b17a9fdc30591....00..08....f9080140f9a88319f8b71b8952b7d2a7721f0000f1241840fa4418407ae8179f1ae90d8052087d091bc92481520801094a....00..29....f9",
+        "NACSignAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191ff4310d1fb830691",
+    }
 }
 
 FAT_MAGIC = b'\xca\xfe\xba\xbe'  # FAT magic number in little endian
