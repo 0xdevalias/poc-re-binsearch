@@ -3,13 +3,32 @@
 import sys
 
 def main():
-    # Check for the correct number of arguments
-    if len(sys.argv) < 2:
-        print("Usage: python diff_hex.py hex_string1 hex_string2 [hex_string3 ...]")
-        sys.exit(1)
+    hex_strings = []
 
-    # Get hex strings from command line arguments
-    hex_strings = sys.argv[1:]
+    # Check if input is being piped
+    if not sys.stdin.isatty():
+        for line in sys.stdin:
+            hex_strings.append(line.strip())
+
+    # Check if a file flag is provided
+    elif len(sys.argv) == 3 and (sys.argv[1] == '--file' or sys.argv[1] == '-f'):
+        try:
+            with open(sys.argv[2], 'r') as file:
+                hex_strings = [line.strip() for line in file]
+        except IOError as e:
+            print(f"Error reading file: {e}")
+            sys.exit(1)
+
+    # Otherwise, treat arguments as hex strings
+    else:
+        hex_strings = sys.argv[1:]
+
+    # Check if hex strings are provided
+    if not hex_strings:
+        print("Usage: python script_name.py hex_string1 hex_string2 [hex_string3 ...]")
+        print("       cat hex_strings.txt | python script_name.py")
+        print("       python script_name.py --file path/to/hex_strings.txt")
+        sys.exit(1)
 
     # Call the function and print the result
     result = compare_hex_strings(hex_strings)
