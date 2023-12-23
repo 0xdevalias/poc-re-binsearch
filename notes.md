@@ -59,7 +59,7 @@ List architectures in a fat/universal binary:
 eg.
 
 ```bash
-⇒ rabin2 -A macos-13.3.1-22E261-ventura-arm64-identityservicesd
+⇒ rabin2 -A samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
 WARN: run r2 with -e bin.cache=true to fix relocations in disassembly
 000 0x00004000 7922416 x86_64 x86 64 all
 001 0x00794000 8783712 arm_64 arm64e
@@ -75,7 +75,7 @@ Specify which architecture of a fat/univeral binary to operate on with `-a x86_6
 eg.
 
 ```bash
-⇒ rabin2 -a x86_64 -I macos-13.3.1-22E261-ventura-arm64-identityservicesd | head -n 5
+⇒ rabin2 -a x86_64 -I samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | head -n 5
 WARN: run r2 with -e bin.cache=true to fix relocations in disassembly
 arch     x86
 baddr    0x100000000
@@ -83,7 +83,7 @@ binsz    7922416
 bintype  mach0
 bits     64
 
-⇒ rabin2 -a arm_64 -I macos-13.3.1-22E261-ventura-arm64-identityservicesd | head -n 5
+⇒ rabin2 -a arm_64 -I samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd | head -n 5
 WARN: run r2 with -e bin.cache=true to fix relocations in disassembly
 arch     arm
 baddr    0x100000000
@@ -137,7 +137,7 @@ Search for a hex string in binary (using `.` as a wildcard placeholder):
 eg.
 
 ```bash
-⇒ rafind2 -x '554889e54157415641554154534883ec28..89..48897dd04c8b3d' macos-13.3.1-22E261-ventura-arm64-identityservicesd
+⇒ rafind2 -x '554889e54157415641554154534883ec28..89..48897dd04c8b3d' samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
 0xd0fdf
 ```
 
@@ -205,7 +205,7 @@ done
 eg.
 
 ```bash
-⇒ ./rafind2-fat-binary -a x86_64 -b macos-13.3.1-22E261-ventura-arm64-identityservicesd -x '554889e54157415641554154534883ec28..89..48897dd04c8b3d'
+⇒ ./rafind2-fat-binary -a x86_64 -b samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd -x '554889e54157415641554154534883ec28..89..48897dd04c8b3d'
   WARN: run r2 with -e bin.cache=true to fix relocations in disassembly
   -= Results (Raw) =-
   0xd0fdf
