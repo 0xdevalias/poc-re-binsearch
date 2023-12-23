@@ -25,6 +25,21 @@ We can remove the leading offset from the addresses printed out like this:
 ⇒ /usr/bin/nm --defined-only --extern-only --arch=arm64e THE_BINARY | awk '{print "0x" substr($1, length($1) - 5) " " $2 " " $3}'
 ```
 
+Dump bytes at a certain offset within a binary:
+
+```bash
+⇒ rabin2 -A samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
+000 0x00004000 7922416 x86_64 x86 64 all
+001 0x00794000 8783712 arm_64 arm64e
+
+# x86_64 (based on the above 0x00004000 offset + our known x86_64 function offset within that arch binary)
+⇒ xxd -s +$((0x4000 + 0xccfdf)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
+554889e54157415641554154534883ec284989f648897dd04c8b3d
+
+# arm_64 (based on the above 0x00794000 offset + our known arm_64 function offset within that arch binary)
+⇒ xxd -s +$((0x794000 + 0xb7570)) -ps -l 27 samples/macos-13.3.1-22E261-ventura-arm64-identityservicesd
+```
+
 ## `radare2`
 
 Using `radare2`...

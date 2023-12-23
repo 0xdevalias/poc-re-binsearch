@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+check_dependencies_installed() {
+  local missing_deps=()
+  local install_cmds=()
+
+  if ! command -v rabin2 &> /dev/null; then
+    missing_deps+=("radare2 (rabin2)")
+    install_cmds+=("radare2: brew install radare2")
+  fi
+
+  if ! command -v xxd &> /dev/null; then
+    missing_deps+=("xxd")
+    install_cmds+=("xxd: xxd is typically pre-installed with Vim on macOS")
+  fi
+
+  if [ ${#missing_deps[@]} -ne 0 ]; then
+    echo "Error: Missing dependencies. Please install the following:"
+    for dep in "${missing_deps[@]}"; do
+      echo "  $dep"
+    done
+    echo
+    echo "You can install these missing dependencies as follows:"
+    for cmd in "${install_cmds[@]}"; do
+      echo "  $cmd"
+    done
+    exit 1
+  fi
+}
+
+usage() {
+    echo "This script dumps a specified number of bytes from a given offset within an architecture in a macOS fat/universal binary."
+    echo "It leverages radare2 (rabin2) to analyze fat binaries and xxd for dumping bytes."
+    echo
+    echo "Usage: $0 -a ARCH -o OFFSET -l LENGTH -b BIN"
+    echo "  -a ARCH   Specify the architecture within the fat binary (e.g., x86_64, arm_64)"
+    echo "  -o OFFSET Specify the offset within the architecture (in hexadecimal)"
+    echo "  -l LENGTH Specify the number of bytes to dump"
+    echo "  -b BIN    Specify the binary file"
+    echo "  -h        Display this help message"
+    echo
+    echo "Examples:"
+    echo "  For x86_64 architecture:"
+    echo "    $0 -a x86_64 -o [offset] -l [length] -b [binary file]"
+    echo "  For arm_64 architecture:"
+    echo "    $0 -a arm_64 -o [offset] -l [length] -b [binary file]"
+    echo
+    echo "Example usage:"
+    echo "  $0 -a x86_64 -o 0xccfdf -l 40 -b samples/foo"
+    echo "  $0 -a arm_64 -o 0xb7570 -l 40 -b samples/foo"
+    echo
+    check_dependencies_installed
+
+    exit 1
+}
+
+
+# Parsing command-line arguments
+while getopts "a:b:o:l:h" opt; do
+    case $opt in
+        a) ARCH="$OPTARG" ;;
+        o) OFFSET="$OPTARG" ;;
+        l) LENGTH="$OPTARG" ;;
+        b) BIN="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+# Check if necessary arguments are provided
+if [ -z "$ARCH" ] || [ -z "$OFFSET" ] || [ -z "$LENGTH" ] || [ -z "$BIN" ]; then
+    usage
+fi
+
+# Call the function to check for dependencies installation
+check_dependencies_installed
+
+# Finding the architecture specific offset in the fat binary
+arch_offset=$(rabin2 -A "$BIN" | awk -v arch="$ARCH" '$4 == arch {print $2}')
+
+if [ -z "$arch_offset" ]; then
+    echo "Error: Architecture $ARCH not found in $BIN"
+    exit 1
+fi
+
+# Convert hex offset to decimal for xxd
+arch_offset_dec=$((arch_offset))
+offset_dec=$((OFFSET + arch_offset_dec))
+
+# Dumping the specified number of bytes
+xxd -s "+$offset_dec" -l "$LENGTH" -ps "$BIN" | tr -d '\n'; echo
