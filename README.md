@@ -5,4 +5,5 @@ Proof of Concept (PoC) code/notes exploring reverse engineering techniques for m
 See:
 
 - [`notes.md`](./notes.md)
+- [`find_fat_binary_offsets.py`](`./find_fat_binary_offsets.py`)
 - etc
