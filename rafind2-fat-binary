@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+check_radare2_installed() {
+  if ! command -v rabin2 &> /dev/null || ! command -v rafind2 &> /dev/null; then
+    echo "Error: radare2 is not installed. Install it using 'brew install radare2'."
+    exit 1
+  fi
+}
+
+usage() {
+    echo "This script searches for a specified hexadecimal pattern in a given binary file for a specified architecture."
+    echo "It leverages radare2 tools (rabin2, rafind2) to analyze fat binaries and extract architecture-specific information."
+    echo
+    echo "Usage: $0 -a ARCH -b BIN -x HEX"
+    echo "  -a ARCH  Specify the architecture to search within the fat binary (e.g., x86_64, arm_64)"
+    echo "  -b BIN   Specify the binary file to search"
+    echo "  -x HEX   Specify the hexadecimal pattern for rafind2"
+    echo "  -h       Display this help message"
+    echo
+    echo "Examples:"
+    echo "  For x86_64 architecture:"
+    echo "    $0 -a x86_64 -b [binary file] -x [hex pattern]"
+    echo "  For arm_64 architecture:"
+    echo "    $0 -a arm_64 -b [binary file] -x [hex pattern]"
+    echo
+    echo "Example usage:"
+    echo "  $0 -a x86_64 -x 'cffaedfe' -b samples/foo"
+    echo
+    check_radare2_installed
+
+    exit 1
+}
+
+# Parsing command-line arguments
+while getopts "a:b:x:h" opt; do
+    case $opt in
+        a) RE_ARCH="$OPTARG" ;;
+        b) RE_BIN="$OPTARG" ;;
+        x) FD_HEX="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+# Check if necessary arguments are provided
+if [ -z "$RE_ARCH" ] || [ -z "$RE_BIN" ] || [ -z "$FD_HEX" ]; then
+    usage
+fi
+
+# Call the function to check for radare2 installation
+check_radare2_installed
+
+rabin2 -A "$RE_BIN" | while read -r id offset size arch arch_etc; do
+    # Check if the current architecture matches RE_ARCH
+    if [ "$arch" != "$RE_ARCH" ]; then
+        continue
+    fi
+
+    # Calculate the start and end offsets of the desired architecture in the fat/universal binary
+    start_hex=$(printf "0x%x" $offset)
+    end_hex=$(printf "0x%x" $(($offset + $size)))
+
+    # Running rafind2 with extracted offsets
+    results=$(rafind2 -f "$start_hex" -t "$end_hex" -x "$FD_HEX" "$RE_BIN")
+
+    # Processing results from rafind2
+    echo "-= Results (Raw) =-"
+    echo "$results"
+    echo
+    echo "-= Results (with offsets corrected for arch location in fat/universal binary) =-"
+    echo "$results" | awk -v start="$offset" '{if ($1 ~ /^0x[0-9a-f]+$/) printf "0x%x\n", $1 - start}'
+done
