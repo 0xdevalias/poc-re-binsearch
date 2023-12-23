@@ -3,7 +3,7 @@
 Proof of Concept (PoC) code/notes exploring reverse engineering techniques for macOS fat binaries, focusing on binary searching and automatic offset identification.
 
 - [`notes.md`](./notes.md): Some random notes I collected while exploring this, including useful commands/snippets/etc.
-- [`find_fat_binary_offsets.py`](`./find_fat_binary_offsets.py`): Python script for searching through a macOS fat/universal binary file to automatically extract offsets that match the specified architectures/patterns (including smart offset adjustments). Includes a number of different search implementations that you can contrast for speed if you enable `PROFILE = True`
+- [`find_fat_binary_offsets.py`](./find_fat_binary_offsets.py): Python script for searching through a macOS fat/universal binary file to automatically extract offsets that match the specified architectures/patterns (including smart offset adjustments). Includes a number of different search implementations that you can contrast for speed if you enable `PROFILE = True`
   - eg.
     - ```bash
       ⇒ ./find_fat_binary_offsets.py /System/Library/PrivateFrameworks/IDS.framework/identityservicesd.app/Contents/MacOS/identityservicesd
