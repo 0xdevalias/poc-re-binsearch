@@ -10,6 +10,7 @@
 PROFILE = False
 DEBUG = False
 
+import argparse
 import struct
 import sys
 import subprocess
@@ -43,13 +44,19 @@ FAT_MAGIC = b'\xca\xfe\xba\xbe'  # FAT magic number in little endian
 MACHO_MAGIC_32 = b'\xce\xfa\xed\xfe'  # 0xfeedface in little endian
 MACHO_MAGIC_64 = b'\xcf\xfa\xed\xfe'  # 0xfeedfacf in little endian
 
-def main():
-    # Usage
-    if len(sys.argv) != 2:
-        print("Usage: python script.py path_to_fat_binary")
-        sys.exit(1)
 
-    file_path = sys.argv[1]
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Find unique patterns in binary.")
+    parser.add_argument("path", help="Path to the binary file")
+    parser.add_argument("--shortest-patterns", action="store_true",
+                        help="Find the shortest unique patterns for each architecture")
+    return parser.parse_args()
+
+def main():
+    args = parse_arguments()
+    file_path = args.path
+    shortest_patterns = args.shortest_patterns
 
     if PROFILE:
         pr = cProfile.Profile()
@@ -57,6 +64,21 @@ def main():
 
     architectures = scan_macho_fat_binary(file_path)
     print_arch_info(architectures)
+
+    if shortest_patterns:
+        print("\n-= Finding Shortest Unique Patterns =-")
+        for i, arch in architectures.items():
+            print(f"Architecture {arch['name']}:")
+            arch_hex_strings = hex_strings.get(arch["name"], {})
+            for name, hex_string in arch_hex_strings.items():
+                shortest_pattern, offset = search_for_shortest_unique_pattern(file_path, arch, hex_string)
+                if offset is not None:
+                    # print(f"  Shortest unique pattern for {name}: {shortest_pattern}, Offset: {offset}")
+                    # print(f"  Shortest unique pattern for {name}: {shortest_pattern}")
+                    print(f"  {name}: {shortest_pattern}")
+                else:
+                    # print(f"  No unique pattern found for {name}")
+                    print(f"  {name}: No unique pattern found")
 
     print("")
 
@@ -296,50 +318,88 @@ def extract_fixed_and_regex(hex_pattern):
     return hex_pattern, None  # Return None if there's no regex pattern
 
 def search_in_architectures_with_fixed_sequences_and_regex(file_path, architectures, hex_strings):
+    """
+    Search for hex patterns in each architecture using fixed sequence and regex,
+    by leveraging the single-architecture function.
+    """
     search_results = {}
-    with open(file_path, 'rb') as file:
-        for i, arch in architectures.items():
-            if not arch["valid_macho_header"]:
-                continue
+    for i, arch in architectures.items():
+        if not arch["valid_macho_header"]:
+            continue  # Skip if there isn't a valid Mach-O header
 
-            arch_hex_strings = hex_strings.get(arch["name"], {})
-            search_results[i] = {name: [] for name in arch_hex_strings}
+        arch_hex_strings = hex_strings.get(arch["name"], {})
+        search_results[i] = {name: [] for name in arch_hex_strings}
 
-            file.seek(arch["offset"])
-            binary_data = file.read(arch["size"])
-
-            for name, hex_string in arch_hex_strings.items():
-                hex_string = hex_string.replace(" ", "").lower()
-                pattern_fixed_prefix, pattern_suffix_regex = extract_fixed_and_regex(hex_string)
-                fixed_bytes = bytes.fromhex(pattern_fixed_prefix)
-
-                # Fast search for the fixed byte sequence
-                start = 0
-                while start < len(binary_data):
-                    start = binary_data.find(fixed_bytes, start)
-                    if start == -1:
-                        break  # No more matches
-
-                    if pattern_suffix_regex is None:
-                        search_results[i][name].append(start) # We found it!
-                        start += len(fixed_bytes)  # Look for next occurrence
-                    else:
-                        remaining_hex_length = len(hex_string) - len(pattern_fixed_prefix)
-                        remaining_hex_length_bytes = remaining_hex_length // 2
-
-                        remaining_start_index = start + len(fixed_bytes)
-                        remaining_end_index = remaining_start_index + remaining_hex_length_bytes
-                        hex_string_to_check = binary_data[remaining_start_index:remaining_end_index].hex()
-
-                        match = pattern_suffix_regex.match(hex_string_to_check)
-                        if match:
-                            matched_length = len(match.group(0)) // 2
-                            search_results[i][name].append(start) # We found it!
-                            start += len(fixed_bytes) + matched_length  # Move forward to search for next occurrence
-                        else:
-                            start += len(fixed_bytes)  # No regex match, move start forward past the current fixed sequence
+        for name, hex_string in arch_hex_strings.items():
+            matches = search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, hex_string)
+            if matches:
+                search_results[i][name] = matches
 
     return search_results
+
+def search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, hex_string):
+    """
+    Search for a hex pattern in a single architecture using fixed sequence and regex.
+    """
+    results = []
+    with open(file_path, 'rb') as file:
+        if not arch["valid_macho_header"]:
+            return results
+
+        hex_string = hex_string.replace(" ", "").lower()
+        pattern_fixed_prefix, pattern_suffix_regex = extract_fixed_and_regex(hex_string)
+        fixed_bytes = bytes.fromhex(pattern_fixed_prefix)
+
+        file.seek(arch["offset"])
+        binary_data = file.read(arch["size"])
+
+        start = 0
+        while start < len(binary_data):
+            start = binary_data.find(fixed_bytes, start)
+            if start == -1:
+                break  # No more matches
+
+            if pattern_suffix_regex is None:
+                results.append(start)  # Found it!
+                start += len(fixed_bytes)  # Look for next occurrence
+            else:
+                remaining_hex_length = len(hex_string) - len(pattern_fixed_prefix)
+                remaining_hex_length_bytes = remaining_hex_length // 2
+
+                remaining_start_index = start + len(fixed_bytes)
+                remaining_end_index = remaining_start_index + remaining_hex_length_bytes
+                hex_string_to_check = binary_data[remaining_start_index:remaining_end_index].hex()
+
+                match = pattern_suffix_regex.match(hex_string_to_check)
+                if match:
+                    matched_length = len(match.group(0)) // 2
+                    results.append(start)  # Found it!
+                    start += len(fixed_bytes) + matched_length  # Move forward to search for next occurrence
+                else:
+                    start += len(fixed_bytes)  # No regex match, move start forward past the current fixed sequence
+
+    return results
+
+def search_for_shortest_unique_pattern(file_path, arch, hex_string):
+    """
+    Search for the shortest unique pattern that matches only a single offset,
+    by trimming from the end of the hex string.
+    """
+    original_length = len(hex_string)
+    last_valid_pattern = hex_string  # Initialize with the original pattern
+    last_valid_offset = None
+
+    for length in range(original_length, 0, -2):  # Decrease length by 2
+        trimmed_hex_string = hex_string[:length]
+        matches = search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, trimmed_hex_string)
+
+        if len(matches) == 1:
+            last_valid_pattern = trimmed_hex_string  # Update last valid pattern
+            last_valid_offset = matches[0]
+        elif len(matches) != 1:
+            break  # Stop if there are no matches or more than one match
+
+    return last_valid_pattern, last_valid_offset  # Return the last valid pattern and offset
 
 def search_in_architectures_with_regex_on_hex_pairs(file_path, architectures, hex_strings):
     search_results = {}
