@@ -2,6 +2,7 @@
 
 import sys
 
+
 def main():
     hex_strings = []
 
@@ -11,9 +12,9 @@ def main():
             hex_strings.append(line.strip())
 
     # Check if a file flag is provided
-    elif len(sys.argv) == 3 and (sys.argv[1] == '--file' or sys.argv[1] == '-f'):
+    elif len(sys.argv) == 3 and (sys.argv[1] == "--file" or sys.argv[1] == "-f"):
         try:
-            with open(sys.argv[2], 'r') as file:
+            with open(sys.argv[2], "r") as file:
                 hex_strings = [line.strip() for line in file]
         except IOError as e:
             print(f"Error reading file: {e}")
@@ -34,9 +35,10 @@ def main():
     result = compare_hex_strings(hex_strings)
     print(result)
 
+
 def compare_hex_strings(hex_strings):
     # Split each hex string into chunks of two characters
-    split_hex = [list(map(''.join, zip(*[iter(s)]*2))) for s in hex_strings]
+    split_hex = [list(map("".join, zip(*[iter(s)] * 2))) for s in hex_strings]
 
     # Transpose the list to compare byte by byte
     transposed_hex = list(zip(*split_hex))
@@ -47,9 +49,10 @@ def compare_hex_strings(hex_strings):
         if all(byte == byte_group[0] for byte in byte_group):
             result.append(byte_group[0])
         else:
-            result.append('..')
+            result.append("..")
 
-    return ''.join(result)
+    return "".join(result)
+
 
 if __name__ == "__main__":
     main()

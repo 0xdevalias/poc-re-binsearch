@@ -37,21 +37,24 @@ hex_strings = {
         "NACInitAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd4301910910",
         "NACKeyEstablishmentAddress": "7f2303d5ff0306d1fc6f12a9fa6713a9f85f14a9f65715a9f44f16a9fd7b17a9fdc30591....00..08....f9080140f9a883",
         "NACSignAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191ff4310d1fb",
-    }
+    },
 }
 
-FAT_MAGIC = b'\xca\xfe\xba\xbe'  # FAT magic number in little endian
-MACHO_MAGIC_32 = b'\xce\xfa\xed\xfe'  # 0xfeedface in little endian
-MACHO_MAGIC_64 = b'\xcf\xfa\xed\xfe'  # 0xfeedfacf in little endian
-
+FAT_MAGIC = b"\xca\xfe\xba\xbe"  # FAT magic number in little endian
+MACHO_MAGIC_32 = b"\xce\xfa\xed\xfe"  # 0xfeedface in little endian
+MACHO_MAGIC_64 = b"\xcf\xfa\xed\xfe"  # 0xfeedfacf in little endian
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Find unique patterns in binary.")
     parser.add_argument("path", help="Path to the binary file")
-    parser.add_argument("--shortest-patterns", action="store_true",
-                        help="Find the shortest unique patterns for each architecture")
+    parser.add_argument(
+        "--shortest-patterns",
+        action="store_true",
+        help="Find the shortest unique patterns for each architecture",
+    )
     return parser.parse_args()
+
 
 def main():
     args = parse_arguments()
@@ -71,7 +74,9 @@ def main():
             print(f"Architecture {arch['name']}:")
             arch_hex_strings = hex_strings.get(arch["name"], {})
             for name, hex_string in arch_hex_strings.items():
-                shortest_pattern, offset = search_for_shortest_unique_pattern(file_path, arch, hex_string)
+                shortest_pattern, offset = search_for_shortest_unique_pattern(
+                    file_path, arch, hex_string
+                )
                 if offset is not None:
                     # print(f"  Shortest unique pattern for {name}: {shortest_pattern}, Offset: {offset}")
                     # print(f"  Shortest unique pattern for {name}: {shortest_pattern}")
@@ -84,7 +89,7 @@ def main():
 
     print("-= Found Symbol Offsets =-")
     for i, arch in architectures.items():
-        offset = get_symbol_offset(file_path, symbol, arch['name'])
+        offset = get_symbol_offset(file_path, symbol, arch["name"])
         if offset is not None:
             print(f"Offset of {symbol} in architecture {arch['name']}: {offset}")
         else:
@@ -94,71 +99,108 @@ def main():
 
     if PROFILE:
         # search_in_architectures_with_rafind2: Approximately 16.0 times slower.
-        rafind2_search_results = search_in_architectures_with_rafind2(file_path, architectures, hex_strings)
-        print_search_results(rafind2_search_results, architectures, suffix=" (with Radare's rafind2)")
+        rafind2_search_results = search_in_architectures_with_rafind2(
+            file_path, architectures, hex_strings
+        )
+        print_search_results(
+            rafind2_search_results, architectures, suffix=" (with Radare's rafind2)"
+        )
         print("")
 
         # search_in_architectures_with_regex_on_hex_pairs: Approximately 5.95 times slower.
-        search_results = search_in_architectures_with_regex_on_hex_pairs(file_path, architectures, hex_strings)
-        print_search_results(search_results, architectures, suffix=" (with pure python regex search on hex pairs)")
+        search_results = search_in_architectures_with_regex_on_hex_pairs(
+            file_path, architectures, hex_strings
+        )
+        print_search_results(
+            search_results,
+            architectures,
+            suffix=" (with pure python regex search on hex pairs)",
+        )
         print("")
 
         # search_in_architectures_with_regex_on_bytes: Approximately 1.42 times slower.
-        search_results = search_in_architectures_with_regex_on_bytes(file_path, architectures, hex_strings)
-        print_search_results(search_results, architectures, suffix=" (with pure python regex search on bytes)")
+        search_results = search_in_architectures_with_regex_on_bytes(
+            file_path, architectures, hex_strings
+        )
+        print_search_results(
+            search_results,
+            architectures,
+            suffix=" (with pure python regex search on bytes)",
+        )
         print("")
 
         # search_in_architectures_with_fixed_sequences: Approximately 1.32 times slower.
-        search_results = search_in_architectures_with_fixed_sequences(file_path, architectures, hex_strings)
-        print_search_results(search_results, architectures, suffix=" (with pure python fixed sequence search)")
+        search_results = search_in_architectures_with_fixed_sequences(
+            file_path, architectures, hex_strings
+        )
+        print_search_results(
+            search_results,
+            architectures,
+            suffix=" (with pure python fixed sequence search)",
+        )
         print("")
 
     # search_in_architectures_with_fixed_sequences_and_regex: This is the fastest method.
-    search_results = search_in_architectures_with_fixed_sequences_and_regex(file_path, architectures, hex_strings)
-    print_search_results(search_results, architectures, suffix=" (with pure python fixed sequence search + regex)")
+    search_results = search_in_architectures_with_fixed_sequences_and_regex(
+        file_path, architectures, hex_strings
+    )
+    print_search_results(
+        search_results,
+        architectures,
+        suffix=" (with pure python fixed sequence search + regex)",
+    )
     print("")
 
     if PROFILE:
         pr.disable()
 
         p = pstats.Stats(pr)
-        p.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats('find_fat_binary_offsets.py')
+        p.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(
+            "find_fat_binary_offsets.py"
+        )
+
 
 def get_arch_name(cpu_type, cpu_subtype, cpu_subtype_caps):
-    """ Return the human-friendly architecture name based on cpu type, subtype, and subtype capability """
+    """Return the human-friendly architecture name based on cpu type, subtype, and subtype capability"""
     arch_names = {
         (16777223, 3, 0): "x86_64",
         (16777228, 2, 128): "arm64e",
         # Add more architecture types if needed
     }
-    return arch_names.get((cpu_type, cpu_subtype, cpu_subtype_caps),
-                          f"Unknown (Type: {cpu_type}, Subtype: {cpu_subtype}, Subtype Capability: {cpu_subtype_caps})")
+    return arch_names.get(
+        (cpu_type, cpu_subtype, cpu_subtype_caps),
+        f"Unknown (Type: {cpu_type}, Subtype: {cpu_subtype}, Subtype Capability: {cpu_subtype_caps})",
+    )
+
 
 def validate_macho_header(file, offset):
-    """ Validate the Mach-O header at the given offset """
+    """Validate the Mach-O header at the given offset"""
     original_position = file.tell()  # Remember the original position
     file.seek(offset)
     magic = file.read(4)
     file.seek(original_position)  # Reset the file position to the original
     return magic in [MACHO_MAGIC_32, MACHO_MAGIC_64]
 
+
 def scan_macho_fat_binary(file_path):
-    """ Scan a Mach-O FAT binary and gather architecture information """
+    """Scan a Mach-O FAT binary and gather architecture information"""
     architectures = {}
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         # Read the magic number to confirm it's a FAT binary
         magic = file.read(4)
         if magic != FAT_MAGIC:
             return "Not a FAT binary"
 
         # Read number of architectures
-        num_archs = struct.unpack('>I', file.read(4))[0]
+        num_archs = struct.unpack(">I", file.read(4))[0]
 
         # Read info for each architecture
         for i in range(num_archs):
             # Read the architecture info
             arch_info = file.read(20)
-            cpu_type, cpu_subtype_full, offset, size, align = struct.unpack('>IIIII', arch_info)
+            cpu_type, cpu_subtype_full, offset, size, align = struct.unpack(
+                ">IIIII", arch_info
+            )
 
             # Extract the cpu_subtype and capability
             cpu_subtype = cpu_subtype_full & 0x00FFFFFF
@@ -179,35 +221,43 @@ def scan_macho_fat_binary(file_path):
                 "offset": offset,
                 "size": size,
                 "align": align,
-                "valid_macho_header": is_valid_macho
+                "valid_macho_header": is_valid_macho,
             }
 
     return architectures
 
+
 def print_arch_info(architectures):
-    """ Print information about each architecture in the FAT binary """
+    """Print information about each architecture in the FAT binary"""
     print("-= Universal Binary Sections =-")
     for i, arch in architectures.items():
         print(f"Architecture {i} ({arch['name']}):")
         print(f"  CPU Type: {arch['cpu_type']} (0x{arch['cpu_type']:x})")
         print(f"  CPU Subtype: {arch['cpu_subtype']} (0x{arch['cpu_subtype']:x})")
-        print(f"  CPU Subtype Capability: {arch['cpu_subtype_caps']} (0x{arch['cpu_subtype_caps']:x})")
-        print(f"  Offset: 0x{arch['offset']:x} (Valid Mach-O Header: {'Yes' if arch['valid_macho_header'] else 'No'})")
+        print(
+            f"  CPU Subtype Capability: {arch['cpu_subtype_caps']} (0x{arch['cpu_subtype_caps']:x})"
+        )
+        print(
+            f"  Offset: 0x{arch['offset']:x} (Valid Mach-O Header: {'Yes' if arch['valid_macho_header'] else 'No'})"
+        )
         print(f"  Size: {arch['size']}")
         print(f"  Align: {arch['align']}")
 
+
 def get_symbol_offset(binary_path, symbol, arch):
-    """ Extract the offset of a named symbol for a given architecture using nm """
+    """Extract the offset of a named symbol for a given architecture using nm"""
     arch_flag = "--arch=x86_64" if arch == "x86_64" else "--arch=arm64e"
     try:
         # Execute nm command with the required architecture flag
         result = subprocess.check_output(
             ["/usr/bin/nm", "--defined-only", "--extern-only", arch_flag, binary_path],
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
         ).decode("utf-8")
 
         if DEBUG:
-            print(f"[DEBUG] get_symbol_offset bin={binary_path}, symbol={symbol}, arch={arch}")
+            print(
+                f"[DEBUG] get_symbol_offset bin={binary_path}, symbol={symbol}, arch={arch}"
+            )
 
         # Parse the output to find the symbol
         for line in result.splitlines():
@@ -224,14 +274,17 @@ def get_symbol_offset(binary_path, symbol, arch):
 
     return None
 
+
 # TODO: make sure this shows 'not found' or similar if we couldn't find it?
 def search_in_architectures(file_path, architectures, hex_strings):
-    """ Search for hex strings with placeholders in each architecture and save their offsets """
+    """Search for hex strings with placeholders in each architecture and save their offsets"""
     search_results = {}
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         for i, arch in architectures.items():
             if not arch["valid_macho_header"]:
-                print(f"Warning: Skipping architecture {i} ({arch['name']}) due to invalid Mach-O header.")
+                print(
+                    f"Warning: Skipping architecture {i} ({arch['name']}) due to invalid Mach-O header."
+                )
                 continue  # Skip if there isn't a valid Mach-O header
 
             file.seek(arch["offset"])
@@ -243,13 +296,19 @@ def search_in_architectures(file_path, architectures, hex_strings):
             search_results[i] = {}
             for name, hex_string in arch_hex_strings.items():
                 hex_string = hex_string.replace(" ", "").lower()
-                hex_bytes = [hex_string[i:i+2] for i in range(0, len(hex_string), 2)]
+                hex_bytes = [
+                    hex_string[i : i + 2] for i in range(0, len(hex_string), 2)
+                ]
 
                 matches = []
                 for offset in range(len(binary_data) - len(hex_bytes) + 1):
                     match = True
                     for j, byte in enumerate(hex_bytes):
-                        if byte != "??" and byte != ".." and int(byte, 16) != binary_data[offset + j]:
+                        if (
+                            byte != "??"
+                            and byte != ".."
+                            and int(byte, 16) != binary_data[offset + j]
+                        ):
                             match = False
                             break
                     if match:
@@ -259,20 +318,27 @@ def search_in_architectures(file_path, architectures, hex_strings):
                     # Store all matches
                     search_results[i][name] = matches
                     if len(matches) > 1:
-                        print(f"Warning: Multiple matches found for {name} in architecture {i}. Matches at offsets: {', '.join(f'0x{m:x}' for m in matches)}")
+                        print(
+                            f"Warning: Multiple matches found for {name} in architecture {i}. Matches at offsets: {', '.join(f'0x{m:x}' for m in matches)}"
+                        )
 
     return search_results
 
+
 def find_longest_fixed_sequence(hex_pattern):
-    """ Finds the longest sequence of bytes in a hex pattern before the first wildcard """
-    wildcard_index = hex_pattern.find('..')
+    """Finds the longest sequence of bytes in a hex pattern before the first wildcard"""
+    wildcard_index = hex_pattern.find("..")
     if wildcard_index != -1:
-        return hex_pattern[:wildcard_index]  # Return the fixed sequence up to the wildcard
-    return hex_pattern  # No wildcard, return the entire pattern
+        # Return the fixed sequence up to the wildcard
+        return hex_pattern[:wildcard_index]
+    else:
+        # No wildcard, return the entire pattern
+        return hex_pattern
+
 
 def search_in_architectures_with_fixed_sequences(file_path, architectures, hex_strings):
     search_results = {}
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         for i, arch in architectures.items():
             if not arch["valid_macho_header"]:
                 continue
@@ -298,8 +364,13 @@ def search_in_architectures_with_fixed_sequences(file_path, architectures, hex_s
                     # Perform detailed byte-by-byte comparison including wildcards
                     end = start + len(hex_string) // 2
                     if end <= len(binary_data):
-                        hex_bytes = [hex_string[j:j+2] for j in range(0, len(hex_string), 2)]
-                        if all(byte == '..' or int(byte, 16) == binary_data[start + j] for j, byte in enumerate(hex_bytes)):
+                        hex_bytes = [
+                            hex_string[j : j + 2] for j in range(0, len(hex_string), 2)
+                        ]
+                        if all(
+                            byte == ".." or int(byte, 16) == binary_data[start + j]
+                            for j, byte in enumerate(hex_bytes)
+                        ):
                             if start not in search_results[i][name]:
                                 search_results[i][name].append(start)
 
@@ -307,9 +378,10 @@ def search_in_architectures_with_fixed_sequences(file_path, architectures, hex_s
 
     return search_results
 
+
 def extract_fixed_and_regex(hex_pattern):
-    """ Extracts the fixed sequence and regex pattern from a hex pattern """
-    wildcard_index = hex_pattern.find('..')
+    """Extracts the fixed sequence and regex pattern from a hex pattern"""
+    wildcard_index = hex_pattern.find("..")
     if wildcard_index != -1:
         fixed_sequence = hex_pattern[:wildcard_index]
 
@@ -317,7 +389,10 @@ def extract_fixed_and_regex(hex_pattern):
         return fixed_sequence, regex_pattern
     return hex_pattern, None  # Return None if there's no regex pattern
 
-def search_in_architectures_with_fixed_sequences_and_regex(file_path, architectures, hex_strings):
+
+def search_in_architectures_with_fixed_sequences_and_regex(
+    file_path, architectures, hex_strings
+):
     """
     Search for hex patterns in each architecture using fixed sequence and regex,
     by leveraging the single-architecture function.
@@ -331,18 +406,21 @@ def search_in_architectures_with_fixed_sequences_and_regex(file_path, architectu
         search_results[i] = {name: [] for name in arch_hex_strings}
 
         for name, hex_string in arch_hex_strings.items():
-            matches = search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, hex_string)
+            matches = search_with_fixed_sequences_and_regex_for_single_arch(
+                file_path, arch, hex_string
+            )
             if matches:
                 search_results[i][name] = matches
 
     return search_results
+
 
 def search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, hex_string):
     """
     Search for a hex pattern in a single architecture using fixed sequence and regex.
     """
     results = []
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         if not arch["valid_macho_header"]:
             return results
 
@@ -368,17 +446,24 @@ def search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, hex_s
 
                 remaining_start_index = start + len(fixed_bytes)
                 remaining_end_index = remaining_start_index + remaining_hex_length_bytes
-                hex_string_to_check = binary_data[remaining_start_index:remaining_end_index].hex()
+                hex_string_to_check = binary_data[
+                    remaining_start_index:remaining_end_index
+                ].hex()
 
                 match = pattern_suffix_regex.match(hex_string_to_check)
                 if match:
                     matched_length = len(match.group(0)) // 2
                     results.append(start)  # Found it!
-                    start += len(fixed_bytes) + matched_length  # Move forward to search for next occurrence
+                    start += (
+                        len(fixed_bytes) + matched_length
+                    )  # Move forward to search for next occurrence
                 else:
-                    start += len(fixed_bytes)  # No regex match, move start forward past the current fixed sequence
+                    start += len(
+                        fixed_bytes
+                    )  # No regex match, move start forward past the current fixed sequence
 
     return results
+
 
 def search_for_shortest_unique_pattern(file_path, arch, hex_string):
     """
@@ -391,7 +476,9 @@ def search_for_shortest_unique_pattern(file_path, arch, hex_string):
 
     for length in range(original_length, 0, -2):  # Decrease length by 2
         trimmed_hex_string = hex_string[:length]
-        matches = search_with_fixed_sequences_and_regex_for_single_arch(file_path, arch, trimmed_hex_string)
+        matches = search_with_fixed_sequences_and_regex_for_single_arch(
+            file_path, arch, trimmed_hex_string
+        )
 
         if len(matches) == 1:
             last_valid_pattern = trimmed_hex_string  # Update last valid pattern
@@ -399,12 +486,18 @@ def search_for_shortest_unique_pattern(file_path, arch, hex_string):
         elif len(matches) != 1:
             break  # Stop if there are no matches or more than one match
 
-    return last_valid_pattern, last_valid_offset  # Return the last valid pattern and offset
+    return (
+        last_valid_pattern,
+        last_valid_offset,
+    )  # Return the last valid pattern and offset
 
-def search_in_architectures_with_regex_on_hex_pairs(file_path, architectures, hex_strings):
+
+def search_in_architectures_with_regex_on_hex_pairs(
+    file_path, architectures, hex_strings
+):
     search_results = {}
 
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         for i, arch in architectures.items():
             if not arch["valid_macho_header"]:
                 continue
@@ -419,7 +512,7 @@ def search_in_architectures_with_regex_on_hex_pairs(file_path, architectures, he
             for name, hex_string in arch_hex_strings.items():
                 hex_string = hex_string.replace(" ", "").lower()
                 # Convert ".." to regex wildcard ".{2}"
-                regex_pattern = hex_string.replace('..', '.{2}')
+                regex_pattern = hex_string.replace("..", ".{2}")
 
                 for match in re.finditer(regex_pattern, hex_data):
                     # Convert the match start index in hex string to byte index
@@ -428,28 +521,30 @@ def search_in_architectures_with_regex_on_hex_pairs(file_path, architectures, he
 
     return search_results
 
+
 def hex_to_byte_pattern(hex_string):
     """
     Convert a hex string with wildcards ('..') into a byte regex pattern.
     """
 
     # Convert the hex string to a byte regex pattern
-    byte_regex_pattern = b''
+    byte_regex_pattern = b""
     j = 0
     while j < len(hex_string):
-        if hex_string[j:j+2] == '..':
-            byte_regex_pattern += b'.'
+        if hex_string[j : j + 2] == "..":
+            byte_regex_pattern += b"."
             j += 2
         else:
-            byte_regex_pattern += re.escape(bytes.fromhex(hex_string[j:j+2]))
+            byte_regex_pattern += re.escape(bytes.fromhex(hex_string[j : j + 2]))
             j += 2
 
     return byte_regex_pattern
 
+
 def search_in_architectures_with_regex_on_bytes(file_path, architectures, hex_strings):
     search_results = {}
 
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         for i, arch in architectures.items():
             if not arch["valid_macho_header"]:
                 continue
@@ -472,12 +567,14 @@ def search_in_architectures_with_regex_on_bytes(file_path, architectures, hex_st
 
 
 def search_in_architectures_with_rafind2(file_path, architectures, hex_strings):
-    """ Search for hex strings in each architecture using rafind2 and save their offsets """
+    """Search for hex strings in each architecture using rafind2 and save their offsets"""
     search_results = {}
 
     for i, arch in architectures.items():
         if not arch["valid_macho_header"]:
-            print(f"Warning: Skipping architecture {i} ({arch['name']}) due to invalid Mach-O header.")
+            print(
+                f"Warning: Skipping architecture {i} ({arch['name']}) due to invalid Mach-O header."
+            )
             continue
 
         # Get hex strings for the current architecture
@@ -485,30 +582,36 @@ def search_in_architectures_with_rafind2(file_path, architectures, hex_strings):
 
         search_results[i] = {}
         for name, hex_string in arch_hex_strings.items():
-            offsets = search_with_rafind2(file_path, arch['offset'], arch['size'], hex_string)
+            offsets = search_with_rafind2(
+                file_path, arch["offset"], arch["size"], hex_string
+            )
             if offsets is not None:
                 search_results[i][name] = offsets
 
     return search_results
 
+
 def search_with_rafind2(binary_path, start_offset, size, hex_string):
-    """ Search for a hex string within a specific architecture of a fat binary using rafind2 and adjust offsets """
-    start_hex = format(start_offset, 'x')
-    end_hex = format(start_offset + size, 'x')
+    """Search for a hex string within a specific architecture of a fat binary using rafind2 and adjust offsets"""
+    start_hex = format(start_offset, "x")
+    end_hex = format(start_offset + size, "x")
 
     try:
         # Construct the rafind2 command
         rafind2_command = [
             "rafind2",
-            "-f", f"0x{start_hex}",
-            "-t", f"0x{end_hex}",
-            "-x", hex_string,
-            binary_path
+            "-f",
+            f"0x{start_hex}",
+            "-t",
+            f"0x{end_hex}",
+            "-x",
+            hex_string,
+            binary_path,
         ]
 
         # Execute the rafind2 command
         result = subprocess.check_output(rafind2_command, stderr=subprocess.STDOUT)
-        result = result.decode('utf-8')
+        result = result.decode("utf-8")
 
         # Parse and adjust the offsets
         adjusted_offsets = []
@@ -524,15 +627,17 @@ def search_with_rafind2(binary_path, start_offset, size, hex_string):
         print(f"Error executing rafind2: {e.output.decode('utf-8')}")
         return None
 
+
 def print_search_results(search_results, architectures, suffix=""):
-    """ Print the search results for each architecture """
+    """Print the search results for each architecture"""
     print(f"-= Found Hex Offsets{suffix} =-")
     for arch_index, results in search_results.items():
-        arch_name = architectures[arch_index]['name']
+        arch_name = architectures[arch_index]["name"]
         print(f"Architecture {arch_index} ({arch_name}):")
         for name, offsets in results.items():
             offset_strings = [f"0x{offset:x}" for offset in offsets]
             print(f"  {name}: {'; '.join(offset_strings)}")
+
 
 if __name__ == "__main__":
     main()
