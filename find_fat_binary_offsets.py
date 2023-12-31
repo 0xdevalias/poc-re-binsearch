@@ -29,14 +29,14 @@ hex_strings = {
     "x86_64": {
         "IDSProtoKeyTransparencyTrustedServiceReadFrom": "554889e54157415641554154534883ec28..89..48897dd04c8b3d",
         "NACInitAddress": "554889e541574156415541545350b87818",
-        "NACKeyEstablishmentAddress": "554889e54157415641554154534881ec48010000488b05......00488b00488945d04885",
-        "NACSignAddress": "554889e54157415641554154534881eca803000041",
+        "NACKeyEstablishmentAddress": "554889e54157415641554154534881ec..010000488b05......00488b00488945d04885",
+        "NACSignAddress": "554889e54157415641554154534881ec..030000",  # TODO: Find a pattern that gets unique matches for this
     },
     "arm64e": {
-        "IDSProtoKeyTransparencyTrustedServiceReadFrom": "7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa....00..d6....f9c80280b9..6868f8....00..f7....f9..0280b9..68..f8....00..18....f9..01..eb....0054f40300aa39008052fa",
-        "NACInitAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd4301910910",
-        "NACKeyEstablishmentAddress": "7f2303d5ff0306d1fc6f12a9fa6713a9f85f14a9f65715a9f44f16a9fd7b17a9fdc30591....00..08....f9080140f9a883",
-        "NACSignAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191ff4310d1fb",
+        "IDSProtoKeyTransparencyTrustedServiceReadFrom": "7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa....00........f9..0280b9..68..f8....00........f9....80b9..68..f8....00........f9..01..eb....0054f40300aa",  # TODO: Find a pattern that gets unique matches for this
+        "NACInitAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd43019109..8352....00..10....f91f0a3fd6ff0740d1ff....d1....00..08....f9080140f9a8....f8......d2......f2......f2......f2e9",
+        "NACKeyEstablishmentAddress": "7f2303d5ff....d1fc6f..a9fa67..a9f85f..a9f657..a9f44f..a9fd7b..a9fd..0591....00..08....f9080140f9a8....f8......52",
+        "NACSignAddress": "7f2303d5fc6fbaa9fa6701a9f85f02a9f65703a9f44f04a9fd7b05a9fd430191ff....d1................08....f9",  # TODO: Find a pattern that gets unique matches for this
     },
 }
 
