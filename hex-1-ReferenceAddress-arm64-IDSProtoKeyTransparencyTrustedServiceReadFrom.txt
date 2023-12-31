@@ -1,0 +1,30 @@
+# Refs:
+#   https://github.com/beeper/mac-registration-provider/blob/main/nac/offsets.go
+#   https://github.com/beeper/mac-registration-provider/issues/9#issuecomment-1872428661
+#   https://github.com/beeper/mac-registration-provider/pull/12/files#diff-8598c4d766039e63abb2754246abc7d5fe1e93695ae008e9a63bcea3dee50221
+
+# ⇒ sha256sum samples/macos-*
+# 23f14e11c672c07ef5934614ae2b83b34065ffe179e4a9bcdcdf00c2b724b3df  samples/macos-10.14.6-mojave-x86_64-identityservicesd
+# 6423c719735caff7a62ca6ea30da479fa4eb2a8c83255c1340dfcfe5450da2e1  samples/macos-10.15.1-catalina-x86_64-identityservicesd
+# 30bd65178c67bb8680b967dde7ac636b524ecb870590f8e6ba9af0d898f8d466  samples/macos-10.15.2-catalina-x86_64-identityservicesd
+# 0031e8fe5e19941c8ce20da12e2abdca61a54b8f8d7e168f83855cca34a44cfd  samples/macos-10.15.3-catalina-x86_64-identityservicesd
+# 68b96d1beab35116452d33d6fb212b9e23a2795cfe3c91a79148c86f94c7c13e  samples/macos-10.15.4-catalina-x86_64-identityservicesd
+# 651b8032c0775f0af779f31dee5985dc7d7de56f6732a35069916d5ccde4eaa1  samples/macos-10.15.5-catalina-x86_64-identityservicesd
+# ff443057a320436216eaf7f5d825ea37b6d4dc05d088a59eac1bf35172eb73b6  samples/macos-10.15.6-catalina-x86_64-identityservicesd
+# ff443057a320436216eaf7f5d825ea37b6d4dc05d088a59eac1bf35172eb73b6  samples/macos-10.15.7-catalina-x86_64-identityservicesd
+# 5833338da6350266eda33f5501c5dfc793e0632b52883aa2389c438c02d03718  samples/macos-12.7.1-monterey-identityservicesd
+# 3c8357aaa1df1eb3a21d88182a1a0fca1c612a4d63592e022ca65bbf47deee35  samples/macos-13.3.1-22E261-ventura-identityservicesd
+# fff8db27fef2a2b874f7bc6fb303a98e3e3b8aceb8dd4c5bfa2bad7b76ea438a  samples/macos-13.5-22G74-ventura-identityservicesd
+# 034fc179e1cce559931a8e46866f54154cb1c5413902319473537527a2702b64  samples/macos-14.2-sonoma-identityservicesd
+
+# ./xxd-fat-binary -a arm_64 -o 0xb562c -l 100 -b samples/macos-12.7.1-monterey-identityservicesd
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa173500b0f79645f9eb0280b928686bf8183500b0189345f9090380b9296869f8193500b0398f45f91f0109ebc20f0054f40300aa883900f0159546f9
+
+# ./xxd-fat-binary -a arm_64 -o 0xb7570 -l 100 -b samples/macos-13.3.1-22E261-ventura-identityservicesd
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aab63500f0d60e46f9c80280b9296868f8b73500f0f70a46f9ea0280b92a686af8b83500f0180746f93f010aeb02150054f40300aa39008052faf301b2
+
+# ./xxd-fat-binary -a arm_64 -o 0xb524c -l 100 -b samples/macos-13.5-22G74-ventura-identityservicesd
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa363600b0d61246f9c80280b9296868f8373600b0f70e46f9ea0280b92a686af8383600b0180b46f93f010aeb02150054f40300aa39008052faf301b2
+
+# ./xxd-fat-binary -a arm_64 -o 0xbd9f0 -l 100 -b samples/macos-14.2-sonoma-identityservicesd
+7f2303d5ffc301d1fc6f01a9fa6702a9f85f03a9f65704a9f44f05a9fd7b06a9fd830191f30301aa763c00d0d64244f9c80280b9286868f8773c00d0f73e44f9e90280b9296869f8783c00d0183b44f91f0109eb42140054f40300aa39008052faf301b2
