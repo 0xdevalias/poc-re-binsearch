@@ -74,16 +74,21 @@ def main():
             print(f"Architecture {arch['name']}:")
             arch_hex_strings = hex_strings.get(arch["name"], {})
             for name, hex_string in arch_hex_strings.items():
-                shortest_pattern, offset = search_for_shortest_unique_pattern(
-                    file_path, arch, hex_string
-                )
+                (
+                    shortest_pattern,
+                    offset,
+                    match_count,
+                ) = search_for_shortest_unique_pattern(file_path, arch, hex_string)
                 if offset is not None:
                     # print(f"  Shortest unique pattern for {name}: {shortest_pattern}, Offset: {offset}")
                     # print(f"  Shortest unique pattern for {name}: {shortest_pattern}")
                     print(f"  {name}: {shortest_pattern}")
                 else:
                     # print(f"  No unique pattern found for {name}")
-                    print(f"  {name}: No unique pattern found")
+                    print(f"  {name}: No unique pattern found (Matches: {match_count})")
+
+        # Exit early when --shortest-patterns
+        return
 
     print("")
 
@@ -480,16 +485,20 @@ def search_for_shortest_unique_pattern(file_path, arch, hex_string):
             file_path, arch, trimmed_hex_string
         )
 
-        if len(matches) == 1:
+        match_count = len(matches)
+
+        if match_count == 1:
             last_valid_pattern = trimmed_hex_string  # Update last valid pattern
             last_valid_offset = matches[0]
-        elif len(matches) != 1:
+        elif match_count != 1:
             break  # Stop if there are no matches or more than one match
 
+    # Return the last valid pattern, offset, and match count
     return (
         last_valid_pattern,
         last_valid_offset,
-    )  # Return the last valid pattern and offset
+        match_count,
+    )
 
 
 def search_in_architectures_with_regex_on_hex_pairs(
