@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Check if no file path is provided or help is requested
+if [ "$#" -ne 1 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+  echo "Usage: $0 path_to_txt_file"
+  echo
+  echo "Example file format:"
+  echo "# Sample comment or reference URL"
+  echo "# ./xxd-fat-binary -a [ARCH] -o [OFFSET] -l [LENGTH] -b [BINARY_PATH]"
+  echo
+  echo "# Example lines:"
+  echo "# ./xxd-fat-binary -a x86_64 -o 0x123456 -l 100 -b samples/sample-binary1"
+  echo "# ./xxd-fat-binary -a arm_64 -o 0x789abc -l 100 -b samples/sample-binary2"
+  echo "# Additional comments or references"
+  exit 1
+fi
+
+# Path to the .txt file from the first argument
+file="$1"
+
+# Verify that the file exists
+if [ ! -f "$file" ]; then
+  echo "File not found: $file"
+  exit 1
+fi
+
+# Define a suffix for the new file
+suffix="_updated"
+
+# Temporary file to store the updated content
+temp_file=$(mktemp)
+
+# Read each line of the file
+while IFS= read -r line
+do
+  # Check if the line contains './xxd-fat-binary'
+  if [[ $line == *./xxd-fat-binary* ]]; then
+    # Strip the leading '#' using Bash parameter expansion
+    command="${line#\#}"
+
+    # Execute the command and capture the output
+    echo "Processing: $command"
+    output=$(eval "$command")
+    echo "Output: $output"
+    echo
+
+    # Append the output to the line
+    echo "$line" >> $temp_file
+    echo "$output" >> $temp_file
+  else
+    # Copy the line as is
+    echo "$line" >> $temp_file
+  fi
+done < "$file"
+
+# New file name with the suffix
+new_file="${file}${suffix}"
+
+# Move the temporary file to the new file
+mv $temp_file $new_file
+
+echo "Updated content saved to $new_file"
