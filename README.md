@@ -51,6 +51,7 @@ Proof of Concept (PoC) code/notes exploring reverse engineering techniques for m
 - [`rafind2-fat-binary`](./rafind2-fat-binary): Helper script that uses `radare2`'s `rabin` + `rafind2` to search for a hex string (with potential wildcards) in the specified architecture of a macOS fat/universal binary
 - [`xxd-fat-binary`](./xxd-fat-binary): Helper script that uses `radare2`'s `rabin` + `xxd` to dump the specified length of hex bytes in the specified architecture of a macOS fat/universal binary
 - Some tests for recursively searching binary files for a hex string (with potential wildcards) using `radare2`'s `rafind2`:
+  - [`test-fd-rafind2-fzf`](./test-fd-rafind2-fzf) (fast/interactive)
   - [`test-fd-and-rafind2`](./test-fd-and-rafind2) (fastest)
   - [`test-find-and-rafind2`](./test-find-and-rafind2)
   - [`test-grep-and-rafind2`](./test-grep-and-rafind2) (slowest)

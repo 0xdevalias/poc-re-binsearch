@@ -1,0 +1,101 @@
+#!/usr/bin/env zsh
+
+SCRIPT_NAME=$0
+
+# # This version was using named pipes, but I don't think it works any different/better than just piping directly like we do below
+# search_hex_in_files() {
+#   local search_directory=$1
+#   local pattern=$2
+#
+#   # Use a fifo (named pipe) for streaming results from fd to fzf
+#   local fifo=$(mktemp -u)
+#   mkfifo "$fifo"
+#
+#   # Start fd in the background and output results to the fifo
+#   fd . "$search_directory" --type f --exec sh -c 'output=$(rafind2 -x "$1" "$2"); [ -n "$output" ] && echo "$2"' sh "$pattern" {} >"$fifo" &
+#
+#   # Use fzf to read from the fifo without the change:reload binding
+#   cat "$fifo" | \
+#   fzf --header "Searching..." --reverse \
+#       --preview 'rafind2 -x '"$pattern"' {}' \
+#       --bind="load:change-header(Search complete!)" \
+#       --bind="enter:execute(echo 'You selected: {}')+abort"
+#
+#   # Cleanup
+#   rm "$fifo"
+# }
+
+search_hex_in_files() {
+  # Check for -h/--help or incorrect number of arguments
+  if [[ "$*" =~ "(-h|--help)" ]] || [ "$#" -ne 2 ]; then
+    echo "Usage: $SCRIPT_NAME <search_directory> <pattern>"
+    echo "Search for files in <search_directory> containing the hex <pattern> and select them using fzf."
+    echo "Options:"
+    echo "  -h, --help    Display this help message and exit."
+    return
+  fi
+
+  local search_directory=$1
+  local pattern=$2
+
+  # Start fd in the background and output results to the fifo
+  fd . "$search_directory" --type f --exec sh -c 'output=$(rafind2 -x "$1" "$2" 2>/dev/null); [ -n "$output" ] && echo "$2"' sh "$pattern" {} | \
+  fzf --multi --reverse \
+      --header "Searching..." \
+      --bind="load:change-header(Search complete!)" \
+      --preview 'rafind2 -x '"$pattern"' {}' |
+      while read -r selected_item; do
+        echo "Selected: $selected_item"
+      done
+}
+
+# # This version writes temporary files to use as a cache so that --preview doesn't need to be re-executed every time an item is selected
+# # It seems to run slower though.. and is a fair bit more complex.. the above version seems to run good/fast enough for now, at least on my tests so far
+# search_hex_in_files() {
+#   # Check for -h/--help or incorrect number of arguments
+#   if [[ "$*" =~ "(-h|--help)" ]] || [ "$#" -ne 2 ]; then
+#     echo "Usage: $SCRIPT_NAME <search_directory> <pattern>"
+#     echo "Search for files in <search_directory> containing the hex <pattern> and select them using fzf."
+#     echo "Options:"
+#     echo "  -h, --help    Display this help message and exit."
+#     return
+#   fi
+#
+#   local search_directory=$1
+#   local pattern=$2
+#
+#   # Create a temporary folder
+#   local temp_folder=$(mktemp -d)
+#
+#   # Initialize an associative array
+#   declare -A filename_output_map
+#
+#   # Run fd and write outputs to separate files in the temporary folder
+#   # matched_files=$(fd . "$search_directory" --type f --exec sh -c 'mkdir -p "$3/$(dirname "$2")"; output=$(rafind2 -x "$1" "$2" 2>/dev/null); [ -n "$output" ] && echo "$output" > "$3/$2" && echo "$2"' sh "$pattern" {} "$temp_folder")
+#
+#   # echo "$matched_files" |
+#
+#   fd . "$search_directory" --type f --exec sh -c 'mkdir -p "$3/$(dirname "$2")"; output=$(rafind2 -x "$1" "$2" 2>/dev/null); [ -n "$output" ] && echo "$output" > "$3/$2" && echo "$2"' sh "$pattern" {} "$temp_folder" | \
+#   while IFS= read -r file; do
+#     filename=$(grealpath --relative-to="$temp_folder" "$temp_folder/$file")
+#     content=$(cat "$file")
+#     filename_output_map[$filename]=$content
+#
+#     echo "$filename"
+#   done | \
+#     fzf --multi --reverse \
+#       --header "Searching..." \
+#       --bind="load:change-header(Search complete!)" \
+#       --preview "cat '$temp_folder/{}'" |
+#       while read -r selected_item; do
+#         echo "Selected: $selected_item"
+#       done
+#
+#   ls $temp_folder
+#
+#   # Clean up: Remove the temporary folder and its contents
+#   rm -rf "$temp_folder"
+# }
+
+# Call the function with command-line arguments
+search_hex_in_files "$@"
